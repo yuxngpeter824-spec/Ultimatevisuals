@@ -1,0 +1,379 @@
+
+-- ULTIMATE VISUALS V2
+-- Local visual GUI | Mobile friendly
+
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local old = player.PlayerGui:FindFirstChild("UltimateVisuals")
+if old then old:Destroy() end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "UltimateVisuals"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local purple = Color3.fromRGB(145,90,255)
+local dark = Color3.fromRGB(18,18,29)
+local panel = Color3.fromRGB(32,30,48)
+local white = Color3.fromRGB(245,245,255)
+
+local function make(class,props,parent)
+    local o=Instance.new(class)
+    for k,v in pairs(props) do o[k]=v end
+    o.Parent=parent
+    return o
+end
+
+local function round(o)
+    make("UICorner",{CornerRadius=UDim.new(0,10)},o)
+end
+
+local main=make("Frame",{
+    Size=UDim2.fromOffset(340,430),
+    Position=UDim2.new(.5,-170,.5,-215),
+    BackgroundColor3=dark,
+    BorderSizePixel=0
+},gui)
+round(main)
+
+local header=make("TextButton",{
+    Size=UDim2.new(1,0,0,48),
+    BackgroundColor3=Color3.fromRGB(42,30,70),
+    Text="✦ ULTIMATE VISUALS V2",
+    TextColor3=white,
+    TextSize=16,
+    Font=Enum.Font.GothamBold
+},main)
+round(header)
+
+local minimize=make("TextButton",{
+    Size=UDim2.fromOffset(35,32),
+    Position=UDim2.new(1,-78,0,8),
+    Text="—",
+    BackgroundColor3=panel,
+    TextColor3=white,
+    TextSize=20
+},header)
+round(minimize)
+
+local close=make("TextButton",{
+    Size=UDim2.fromOffset(35,32),
+    Position=UDim2.new(1,-39,0,8),
+    Text="×",
+    BackgroundColor3=Color3.fromRGB(130,40,65),
+    TextColor3=white,
+    TextSize=20
+},header)
+round(close)
+
+local restore=make("TextButton",{
+    Size=UDim2.fromOffset(55,55),
+    Position=UDim2.new(.8,0,.5,0),
+    Text="✦",
+    BackgroundColor3=purple,
+    TextColor3=white,
+    TextSize=25,
+    Visible=false
+},gui)
+round(restore)
+
+local function drag(obj,handle)
+    local active=false
+    local start,pos
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType==Enum.UserInputType.Touch
+        or input.UserInputType==Enum.UserInputType.MouseButton1 then
+            active=true
+            start=input.Position
+            pos=obj.Position
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if active and (input.UserInputType==Enum.UserInputType.Touch
+        or input.UserInputType==Enum.UserInputType.MouseMovement) then
+            local d=input.Position-start
+            obj.Position=UDim2.new(pos.X.Scale,pos.X.Offset+d.X,
+                pos.Y.Scale,pos.Y.Offset+d.Y)
+        end
+    end)
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType==Enum.UserInputType.Touch
+        or input.UserInputType==Enum.UserInputType.MouseButton1 then
+            active=false
+        end
+    end)
+end
+
+drag(main,header)
+drag(restore,restore)
+
+minimize.MouseButton1Click:Connect(function()
+    main.Visible=false
+    restore.Visible=true
+end)
+
+restore.MouseButton1Click:Connect(function()
+    main.Visible=true
+    restore.Visible=false
+end)
+
+close.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+local tabs=make("Frame",{
+    Size=UDim2.new(1,-12,0,38),
+    Position=UDim2.fromOffset(6,54),
+    BackgroundTransparency=1
+},main)
+
+local content=make("Frame",{
+    Size=UDim2.new(1,-12,1,-102),
+    Position=UDim2.fromOffset(6,96),
+    BackgroundTransparency=1
+},main)
+
+local names={"Home","FPS","Sky","Avatar","Effects"}
+local pages={}
+
+for i,name in ipairs(names) do
+    local b=make("TextButton",{
+        Size=UDim2.new(1/5,-3,1,0),
+        Position=UDim2.new((i-1)/5,0,0,0),
+        Text=name,
+        TextSize=11,
+        Font=Enum.Font.GothamBold,
+        TextColor3=white,
+        BackgroundColor3=panel
+    },tabs)
+    round(b)
+
+    local p=make("ScrollingFrame",{
+        Size=UDim2.fromScale(1,1),
+        BackgroundTransparency=1,
+        BorderSizePixel=0,
+        ScrollBarThickness=3,
+        AutomaticCanvasSize=Enum.AutomaticSize.Y,
+        CanvasSize=UDim2.new()
+    },content)
+
+    make("UIListLayout",{
+        Padding=UDim.new(0,7),
+        SortOrder=Enum.SortOrder.LayoutOrder
+    },p)
+
+    make("UIPadding",{
+        PaddingTop=UDim.new(0,6),
+        PaddingLeft=UDim.new(0,5),
+        PaddingRight=UDim.new(0,5)
+    },p)
+
+    pages[name]=p
+
+    b.MouseButton1Click:Connect(function()
+        for n,page in pairs(pages) do
+            page.Visible=n==name
+        end
+        for _,button in ipairs(tabs:GetChildren()) do
+            if button:IsA("TextButton") then
+                button.BackgroundColor3=panel
+            end
+        end
+        b.BackgroundColor3=purple
+    end)
+end
+
+local function button(page,title,callback)
+    local b=make("TextButton",{
+        Size=UDim2.new(1,-5,0,38),
+        BackgroundColor3=panel,
+        Text=title,
+        TextColor3=white,
+        TextSize=13,
+        Font=Enum.Font.GothamSemibold
+    },pages[page])
+    round(b)
+    b.MouseButton1Click:Connect(callback)
+    return b
+end
+
+local function toggle(page,title,callback)
+    local state=false
+    local b
+    b=button(page,title.." : OFF",function()
+        state=not state
+        b.Text=title.." : "..(state and "ON" or "OFF")
+        b.BackgroundColor3=state and purple or panel
+        callback(state)
+    end)
+end
+
+local function heading(page,title)
+    local l=make("TextLabel",{
+        Size=UDim2.new(1,-5,0,28),
+        BackgroundTransparency=1,
+        Text=title,
+        TextColor3=purple,
+        TextSize=14,
+        Font=Enum.Font.GothamBold,
+        TextXAlignment=Enum.TextXAlignment.Left
+    },pages[page])
+end
+
+-- HOME
+heading("Home","WELCOME")
+button("Home","Performance mode",function()
+    pcall(function()
+        settings().Rendering.QualityLevel=Enum.QualityLevel.Level01
+    end)
+    Lighting.GlobalShadows=false
+end)
+button("Home","Reset lighting",function()
+    Lighting.ClockTime=14
+    Lighting.GlobalShadows=true
+    Lighting.Brightness=2
+end)
+
+-- FPS
+heading("FPS","GRAPHICS")
+toggle("FPS","Shadows",function(v)
+    Lighting.GlobalShadows=not v
+end)
+toggle("FPS","Post effects",function(v)
+    for _,e in ipairs(Lighting:GetChildren()) do
+        if e:IsA("PostEffect") then e.Enabled=not v end
+    end
+end)
+toggle("FPS","Low graphics",function(v)
+    pcall(function()
+        settings().Rendering.QualityLevel =
+            v and Enum.QualityLevel.Level01 or Enum.QualityLevel.Automatic
+    end)
+end)
+
+-- SKY
+heading("Sky","VISUAL PRESETS")
+
+local function sky(name)
+    local a=Lighting:FindFirstChild("UV_Atmosphere")
+    if not a then
+        a=Instance.new("Atmosphere")
+        a.Name="UV_Atmosphere"
+        a.Parent=Lighting
+    end
+
+    local presets={
+        Galaxy={0,Color3.fromRGB(110,75,220),Color3.fromRGB(35,15,90)},
+        ["Full Moon"]={0,Color3.fromRGB(175,190,225),Color3.fromRGB(45,55,100)},
+        Winter={13,Color3.fromRGB(195,225,255),Color3.fromRGB(150,180,220)},
+        Sunset={18,Color3.fromRGB(255,145,100),Color3.fromRGB(110,45,90)},
+        Space={0,Color3.fromRGB(65,65,110),Color3.fromRGB(15,10,35)},
+        Night={1,Color3.fromRGB(100,110,160),Color3.fromRGB(25,30,60)},
+        Day={14,Color3.fromRGB(255,255,255),Color3.fromRGB(180,190,200)}
+    }
+
+    local data=presets[name]
+    if data then
+        Lighting.ClockTime=data[1]
+        a.Color=data[2]
+        a.Decay=data[3]
+        a.Density=.3
+        a.Haze=1
+    end
+end
+
+for _,name in ipairs({"Galaxy","Full Moon","Winter","Sunset","Space","Night","Day"}) do
+    button("Sky","Apply "..name,function()
+        sky(name)
+    end)
+end
+
+-- AVATAR VISUALS
+heading("Avatar","LOCAL CHARACTER VISUALS")
+
+local saved={}
+local function getCharacter()
+    return player.Character
+end
+
+local function headless(on)
+    local char=getCharacter()
+    if not char then return end
+    local head=char:FindFirstChild("Head")
+    if not head then return end
+
+    if on then
+        saved.HeadTransparency=head.Transparency
+        head.Transparency=1
+        local face=head:FindFirstChildWhichIsA("Decal")
+        if face then
+            saved.FaceTransparency=face.Transparency
+            face.Transparency=1
+        end
+    else
+        head.Transparency=saved.HeadTransparency or 0
+        local face=head:FindFirstChildWhichIsA("Decal")
+        if face then
+            face.Transparency=saved.FaceTransparency or 0
+        end
+    end
+end
+
+local korblox=false
+local function korbloxVisual(on)
+    local char=getCharacter()
+    if not char then return end
+    local leg=char:FindFirstChild("RightLowerLeg")
+        or char:FindFirstChild("Right Leg")
+
+    if not leg then return end
+
+    if on then
+        saved.LegTransparency=leg.Transparency
+        leg.Transparency=1
+    else
+        leg.Transparency=saved.LegTransparency or 0
+    end
+end
+
+toggle("Avatar","Headless visual",headless)
+toggle("Avatar","Korblox leg visual",korbloxVisual)
+
+button("Avatar","Reset avatar visuals",function()
+    headless(false)
+    korbloxVisual(false)
+end)
+
+-- EFFECTS
+heading("Effects","EXTRA EFFECTS")
+toggle("Effects","Bloom",function(v)
+    local e=Lighting:FindFirstChild("UV_Bloom")
+    if not e then
+        e=Instance.new("BloomEffect")
+        e.Name="UV_Bloom"
+        e.Parent=Lighting
+    end
+    e.Enabled=v
+end)
+toggle("Effects","Color correction",function(v)
+    local e=Lighting:FindFirstChild("UV_Color")
+    if not e then
+        e=Instance.new("ColorCorrectionEffect")
+        e.Name="UV_Color"
+        e.Parent=Lighting
+    end
+    e.Enabled=v
+end)
+
+pages.Home.Visible=true
+for _,b in ipairs(tabs:GetChildren()) do
+    if b:IsA("TextButton") and b.Text=="Home" then
+        b.BackgroundColor3=purple
+    end
+end
+
+print("UltimateVisuals V2 loaded!")
